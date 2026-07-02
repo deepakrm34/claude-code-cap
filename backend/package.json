@@ -23,6 +23,7 @@
     "migrate:create": "node-pg-migrate create"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.109.1",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

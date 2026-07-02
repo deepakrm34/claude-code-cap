@@ -3,6 +3,8 @@ import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { closePool } from './db';
+import authRouter from './routes/auth';
+import tasksRouter from './routes/tasks';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -22,6 +24,9 @@ app.get('/health', (_req: Request, res: Response) => {
   });
 });
 
+app.use('/auth', authRouter);
+app.use('/tasks', tasksRouter);
+
 // --- 404 handler -----------------------------------------------------------
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ error: 'Not Found' });
@@ -35,25 +40,31 @@ app.use((err: Error, _req: Request, res: Response, _next: express.NextFunction) 
 
 // --- Start server ----------------------------------------------------------
 const server = app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+  console.log(`Server listening on http://localhost:${String(PORT)}`);
 });
 
 // --- Graceful shutdown -----------------------------------------------------
 const shutdown = (signal: string) => {
   console.log(`\n${signal} received, shutting down gracefully...`);
-  server.close(async () => {
-    console.log('HTTP server closed.');
-    try {
-      await closePool();
-      console.log('PostgreSQL pool closed.');
-    } catch (err) {
-      console.error('Error closing PostgreSQL pool:', err);
-    }
-    process.exit(0);
+  server.close(() => {
+    void (async () => {
+      console.log('HTTP server closed.');
+      try {
+        await closePool();
+        console.log('PostgreSQL pool closed.');
+      } catch (err) {
+        console.error('Error closing PostgreSQL pool:', err);
+      }
+      process.exit(0);
+    })();
   });
 };
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => {
+  shutdown('SIGTERM');
+});
+process.on('SIGINT', () => {
+  shutdown('SIGINT');
+});
 
 export default app;

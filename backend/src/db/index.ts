@@ -45,7 +45,7 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
     const ms = Number(process.hrtime.bigint() - start) / 1e6;
     if (ms > SLOW_QUERY_MS) {
       const sql = text.replace(/\s+/g, ' ').trim();
-      console.warn(`[db] slow query ${ms.toFixed(1)}ms (${result.rowCount ?? 0} rows): ${sql}`);
+      console.warn(`[db] slow query ${ms.toFixed(1)}ms (${String(result.rowCount ?? 0)} rows): ${sql}`);
     }
   }
   return result;
