@@ -11,6 +11,11 @@ const router = Router();
 // bcrypt cost factor — within the requested 10-12 range.
 const BCRYPT_COST = 12;
 
+// Compared against when a login email doesn't exist, so the unknown-email and
+// wrong-password paths take the same wall-clock time (prevents user
+// enumeration via response timing). Computed once at module load.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync('timing-equalizer-placeholder', BCRYPT_COST);
+
 const registerSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(8),
@@ -99,6 +104,8 @@ router.post(
     );
 
     if (result.rows.length === 0) {
+      // Burn the same bcrypt time as a real comparison before responding.
+      await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
