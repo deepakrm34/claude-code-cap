@@ -18,6 +18,21 @@ const unauthenticatedMiddleware: Middleware = ({ dispatch, getState }) => (next)
   return next(action);
 };
 
+/**
+ * RTK Query's cache is keyed by endpoint+args only — it has no notion of which
+ * user fetched the data. Without this, one user's cached tasks survive logout
+ * (default keepUnusedDataFor: 60s) and are served to the next user on the same
+ * tab. Listening for the logout action covers every call site: the header
+ * button, the 401 auto-logout above, and any future one.
+ */
+const resetApiOnLogout: Middleware = (storeApi) => (next) => (action) => {
+  const result = next(action);
+  if (logout.match(action)) {
+    storeApi.dispatch(api.util.resetApiState());
+  }
+  return result;
+};
+
 /** Factory so tests can create isolated stores; the app uses the singleton below. */
 export function makeStore() {
   return configureStore({
@@ -26,7 +41,7 @@ export function makeStore() {
       [api.reducerPath]: api.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(api.middleware, unauthenticatedMiddleware),
+      getDefaultMiddleware().concat(api.middleware, unauthenticatedMiddleware, resetApiOnLogout),
   });
 }
 

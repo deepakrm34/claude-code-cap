@@ -17,13 +17,16 @@ const BCRYPT_COST = 12;
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync('timing-equalizer-placeholder', BCRYPT_COST);
 
 const registerSchema = z.object({
-  email: z.string().trim().email(),
+  // Lowercase at the boundary: users.email is case-sensitively UNIQUE, so
+  // without this "Alice@x.com" and "alice@x.com" would be two accounts and a
+  // case-variant login would 401 with the correct password.
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8),
   name: z.string().trim().min(1),
 });
 
 const loginSchema = z.object({
-  email: z.string().trim().email(),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1),
 });
 
