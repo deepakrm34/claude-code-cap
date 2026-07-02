@@ -10,6 +10,9 @@ build/
 .env.*
 !.env.example
 
+# Claude Code personal settings (machine-specific; shared settings live in .claude/settings.json)
+.claude/settings.local.json
+
 # Logs
 *.log
 npm-debug.log*
